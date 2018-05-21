@@ -85,12 +85,16 @@ def collect_reads_from_splits(a_split_list, breakpoints):
 def group_splits_reads(reads, SA_bundles):
     """summarize splits and leave an example per split for annotation """
     """assume same left-right_split, same overlaps and gaps number in read"""
+    """remove split_location_that fused to more than 20 different places -- potential artefacts???"""
     left_right_splits={}
     for r in reads:
         match_cood=SA_bundles[r][1]
         boundary="-".join(["_".join([str(x) for x in SA_bundles[r][1][0][2]]), "_".join([str(x) for x in SA_bundles[r][1][-1][0]])])
         left_right_splits[boundary]=match_cood
-    return left_right_splits
+    if len(left_right_splits)<=20:
+        return left_right_splits
+    else:
+        return {}
 
 def combine_left_right_clusteres(left_splits_clustered0, right_splits_clustered0, SA_bundles, left_breakpoints, right_breakpoints):
     """remove redundancy of splits invovled in multiple fusions"""

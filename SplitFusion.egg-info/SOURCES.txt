@@ -1,0 +1,15 @@
+MANIFEST.in
+README.md
+setup.py
+SplitFusion/2018_05_21_SplitFusion.py
+SplitFusion/Fusion_annotation.py
+SplitFusion/Group_split.py
+SplitFusion/Multiple_alignment.py
+SplitFusion/__init__.py
+SplitFusion.egg-info/PKG-INFO
+SplitFusion.egg-info/SOURCES.txt
+SplitFusion.egg-info/dependency_links.txt
+SplitFusion.egg-info/requires.txt
+SplitFusion.egg-info/top_level.txt
+SplitFusion/Reference_feat/NCBIRef_seq_HG19_fest.txt
+SplitFusion/Reference_feat/NCBI_refSeqGRC38_features.txt

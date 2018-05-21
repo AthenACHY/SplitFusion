@@ -1,0 +1,4 @@
+include README.md
+recursive-include SplitFusion/ *.py
+recursive-include SplitFusion/Reference_feat/ *.txt
+
