@@ -1,3 +1,5 @@
+import HTSeq, itertools
+from itertools import groupby
 ####3. define, sort and cluster split points ###
 ### report readID, left split, right split ###
 ###3.1 group_splits ###

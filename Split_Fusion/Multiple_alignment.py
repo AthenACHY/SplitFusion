@@ -1,3 +1,5 @@
+from itertools import groupby
+
 def calculate_overlaps_between_alignment(partial_patterns, i):
     """assume overlapping only at the end of each alignment"""
     """left_fragment has left_overlap at the 3' end of the fragment """

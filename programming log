@@ -474,4 +474,45 @@ a_split='6_117647385-6_117647470'
 breaks=left_right_splits[a_split]
 break_5, break_3, gene5, gene3=extract_break_genes(breaks, transcript)
 gene_list=list(itertools.product(gene5, gene3))
+genes_model={}
+for g in gene_list:
+        try:
+            bk5_location=genes_model[g[0]][break_5]
+        except:
+            genes_model[g[0]]=build_gene_model(g[0], GFF_dict)
+        try:
+            bk3_location=genes_model[g[1]][break_3]
+        except:
+            genes_model[g[1]]=build_gene_model(g[1], GFF_dict)
+
+bk5_location=genes_model[g[0]][break_5]
+bk3_location=genes_model[g[1]][break_3]
+(bk5_location, bk3_location)
+bk5_gene=GFF_dict[g[0]]['name2']
+bk3_gene=GFF_dict[g[1]]['name2']
+bk5_gene_orientation=GFF_dict[g[0]]['strand']
+bk3_gene_orientation=GFF_dict[g[1]]['strand']
+
+if bk5_location==set([]):
+            bk5_anno, dis_from_5anno, bk5_ref_upstream5, bk5_ref_downstream3=determine_intron_5(break_5, g, genes_model, breaks)
+else:
+            bk5_anno=list(bk5_location)[0]
+            dis_from_5anno=0
+            bk5_ref_upstream5=None
+            bk5_ref_downstream3=None
+
+if bk3_location==set([]):
+            bk3_anno, dis_from_3anno, bk3_ref_upstream5, bk3_ref_downstream3=determine_intron_3(break_3, g, genes_model, breaks)
+else:
+            bk3_anno=list(bk3_location)[0]
+            dis_from_3anno=0
+            bk3_ref_upstream5=None
+            bk3_ref_downstream3=None
+
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+bk5_cDNA_part=int(bk5_anno.split("_")[-2]) 
+bk3_codon_phrase=int(bk3_anno.split("_")[-1])           
+gaps=dis_from_5anno +  bps  +  dis_from_3anno
+bps=breaks[1][1]-breaks[0][3]
+(bk5_anno, gaps, bk3_anno)
 

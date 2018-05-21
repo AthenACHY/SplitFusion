@@ -1,3 +1,4 @@
+import HTSeq, itertools
 #### Refseq version###
 ###GFF_file='/home/athena/Refseq/HG19/NCBIRef_seq_HG19_fest.txt'
 def read_in_feature_file(GFF_file):
@@ -265,7 +266,7 @@ def determine_break_location(break_5, break_3, gene5, gene3, genes_model, GFF_di
             bk3_ref_downstream3=None
 ### claculate frames for fusion###
         bk5_frame_status, bk3_frame_status, frame_status=determine_frame(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno, bk5_ref_upstream5, bk5_ref_downstream3, bk3_ref_upstream5, bk3_ref_downstream3, breaks, bk5_gene_orientation, bk3_gene_orientation)
-        splits_combinations.append("\t".join([a_split, bk5_gene, bk5_anno, bk3_gene, bk3_anno, frame_status])+"\n")
+        splits_combinations.append("\t".join([a_split, bk5_gene, bk5_anno, bk3_gene, bk3_anno, frame_status]))
     return splits_combinations, genes_model
 
 

@@ -2,7 +2,7 @@ if __name__ == "__main__":
     import os, sys, subprocess, HTSeq, argparse, itertools
     from subprocess import Popen, PIPE
     from itertools import groupby 
-
+    from Split_Fusion import Multiple_alignment, Group_split, Fusion_annotation
     parser = argparse.ArgumentParser(description='SplitFusion v1')   
     parser = argparse.ArgumentParser(description='SplitFusion: identifying chromosomal rearrangement via target-deep sequencing RNA/DNA data')
     parser.add_argument('--wkdir', help='dir for intermediate and final output file(s).', action="store", dest="wkdir")
@@ -42,17 +42,17 @@ if __name__ == "__main__":
     M_length=args.M_length
     min_exclusive=args.M_length
     ### only save alignment of a read if > mapq###
-    SA_bundles, left_breakpoints, right_breakpoints=build_alignment_bundles(in_sam)
-`   left_splits_clustered0, right_splits_clustered0, left_right_splits=group_and_filter_splits(left_breakpoints, right_breakpoints, SA_bundles)
-    GFF_dict, transcript=read_in_feature_file(args.GFF_file)
+    SA_bundles, left_breakpoints, right_breakpoints=Multiple_alignment.build_alignment_bundles(in_sam)
+`   left_splits_clustered0, right_splits_clustered0, left_right_splits=Group_split.group_and_filter_splits(left_breakpoints, right_breakpoints, SA_bundles)
+    GFF_dict, transcript=Fusion_annotation.read_in_feature_file(args.GFF_file)
     genes_model={}
-    bk_output=extract_boundary_from_reads(GFF_dict, transcript, left_right_splits, genes_model, args.target_genes)
+    bk_output=Fusion_annotation.extract_boundary_from_reads(GFF_dict, transcript, left_right_splits, genes_model, args.target_genes)
 ### output all posible combinations of the transcript models for each breakpoints###
-    bk_output=set(bk_output)
+    bk_output=list(set(bk_output)
+    bk_output="\n".join(bk_output)
     outfile=wkdir + "/" + args.out_txt
     o=open(outfile, "w")
-    o.write(left_output)
-    o.write(right_output)
+    o.write(bk_output)
     o.close()
 
 
