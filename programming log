@@ -1,0 +1,477 @@
+###2018-05-16 programming log###
+### fixing the breakpoints location for EML4 ###
+1) find all reads marking the left split EML4
+EML4_keys=list([i[1] for i in left_breakpoints[HTSeq.GenomicInterval("2", 42490446, 42490447)].steps()][0])
+left_cood=set([SA_bundles[i][1][0][2] for i in EML4_keys])
+>set([('2', 42490446)])
+right_cood=set([SA_bundles[i][1][1][0] for i in EML4_keys])
+>set([('2', 29446369), ('2', 42491846), ('2', 29446397)])
+### only one left_split but three right splits, so in theory should show up in right_breaklist###
+
+[i for i in right_breaklist if "2_29446" in i[0]]
+### but no! It is not in the right breaklist###
+EML_AKL_keys=list([i[1] for i in right_breakpoints[HTSeq.GenomicInterval("2", 29446365, 29446375)].steps()][0])
+>>['ZHENGLABSEQ002_1:21106:4958:5253']
+EML_AKL_keys=list([i[1] for i in right_breakpoints[HTSeq.GenomicInterval("2", 29446397, 29446398)].steps()][0])
+###75 reads ### 
+left_cood=set([SA_bundles[i][1][0][2] for i in EML_AKL_keys])
+>set([('2', 42488399), ('2', 42492089), ('2', 42490446)])
+
+right_cood=set([SA_bundles[i][1][1][0] for i in EML_AKL_keys])
+>set([('2', 29446397)])
+### check stagger left and stagger right ###
+stag_right=set([SA_bundles[i][1][1][2] for i in EML_AKL_keys])
+>set([('2', 29446360), ('2', 29446359), ('2', 29446362), ('2', 29446361)])
+stag_left=set([SA_bundles[i][1][0][0] for i in EML_AKL_keys])
+### multiple breakpoints generate multiple stager left ends###
+
+### double check where the plit were filtered out ###
+[i for i in right_splits_clustered if i[0][0].chrom =="2" and i[0][0].start > 29446390]
+### yes still here ###
+[i for i in right_splits_clustered0 if i[0][0].chrom =="2" and i[0][0].start > 29446390 and i[0][0].start < 29446400]
+> [[(<GenomicInterval object '2', [29446393,29446394), strand '.'>, 6), (<GenomicInterval object '2', [29446394,29446395), strand '.'>, 6), (<GenomicInterval object '2', [29446395,29446396), strand '.'>, 6), (<GenomicInterval object '2', [29446397,29446398), strand '.'>, 6), (<GenomicInterval object '2', [29446399,29446400), strand '.'>, 6), (<GenomicInterval object '2', [29446401,29446402), strand '.'>, 6), (<GenomicInterval object '2', [29446404,29446405), strand '.'>, 6)]]
+### all breakpoints from 29446393-405 were merged ###
+### Fixed codes in collect_reads_from_splits(a_split_list, breakpoints) and now the correct cood are in the breaklist
+i=[i for i in right_splits_clustered0 if i[0][0].chrom =="2" and i[0][0].start > 29446390 and i[0][0].start < 29446400][0]
+collect_reads_from_splits(i, right_breakpoints)
+> [(<GenomicInterval object '2', [29446393,29446394), strand '.'>, 6), (<GenomicInterval object '2', [29446394,29446395), strand '.'>, 6), (<GenomicInterval object '2', [29446395,29446396), strand '.'>, 6), (<GenomicInterval object '2', [29446397,29446398), strand '.'>, 6), (<GenomicInterval object '2', [29446399,29446400), strand '.'>, 6), (<GenomicInterval object '2', [29446401,29446402), strand '.'>, 6), (<GenomicInterval object '2', [29446404,29446405), strand '.'>, 6)]
+>>> collect_reads_from_splits(i, right_breakpoints)
+[[6, ['2_42492090-2_29446393']], [6, ['2_29448325-2_29446394']], [6, ['2_42491871-2_29446395', '2_42492091-2_29446395']], [6, ['2_42488399-2_29446397', '2_42490446-2_29446397', '2_42492089-2_29446397']], [6, ['2_29446461-2_29446399', '2_29446466-2_29446399']], [6, ['2_29446452-2_29446401']], [6, ['2_29446452-2_29446404', '2_29446477-2_29446404']]]
+
+### check if the EML4-AKL breakpoint is in the right breaklist "2_29446393-2_29446404"now ###
+[i for i in right_breaklist if "2_2944639" in i[0]]
+>[['2_29446393-2_29446404', [[6, ['2_42492090-2_29446393']], [6, ['2_29448325-2_29446394']], [6, ['2_42491871-2_29446395', '2_42492091-2_29446395']], [6, ['2_42488399-2_29446397', '2_42490446-2_29446397', '2_42492089-2_29446397']], [6, ['2_29446461-2_29446399', '2_29446466-2_29446399']], [6, ['2_29446452-2_29446401']], [6, ['2_29446452-2_29446404', '2_29446477-2_29446404']]], 42]]
+
+### check the annotation for '2_29446393-2_29446404' ###
+right_breaks_per_bin['2_29446393-2_29446404']
+### Annotation was correct for 'NM_001145076.2' 2_42490446 in emsembl 	ENSE00001779613
+
+### first run toolk 2:30 for A02-P702.consolidated.bam ###
+### modify code so reduce g_model generation iteration ###
+### second run 2:34 min for A02-P702.consolidated.bam ###
+#### still have to fix the annotation- problem of overlapping and gap ###
+##1) report the raw cDNA partition left-most from query to right most of query##
+##
+## make SA_bundles with corrected query_partition no trimming of overlap ##
+### get examples from EML_AKL_keys ###
+SA_bundles[EML_AKL_keys[0]]
+### try again 
+[i for i in right_splits_clustered0 if i[0][0].chrom =="2" and i[0][0].start > 29446390 and i[0][0].start < 29446400]
+i=[i for i in right_splits_clustered0 if i[0][0].chrom =="2" and i[0][0].start > 29446390 and i[0][0].start < 29446400][0]
+>[[(<GenomicInterval object '2', [29446393,29446394), strand '.'>, 4), (<GenomicInterval object '2', [29446394,29446395), strand '.'>, 4), (<GenomicInterval object '2', [29446395,29446396), strand '.'>, 4), (<GenomicInterval object '2', [29446396,29446397), strand '.'>, 4), (<GenomicInterval object '2', [29446398,29446399), strand '.'>, 4), (<GenomicInterval object '2', [29446400,29446401), strand '.'>, 4), (<GenomicInterval object '2', [29446401,29446402), strand '.'>, 4), (<GenomicInterval object '2', [29446402,29446403), strand '.'>, 4)]]
+
+### 2018_05_17####
+### positive control 'ZHENGLABSEQ002_2:11109:21494:16208'--left_right_splits['2_42490447-2_29446395']###
+### annotation 2_42490447 EML4 exonic synonymous exonic synonymous_SNV NM_001145076 exon4 462 -- 2_29446396 ALK - exonic synonymous_SNV NM_004304 exon20 3177###
+### final result in-frame EML4 exon4 c.468 .NM_001145076.---ALK exon20 c.3171 ###
+left_right_splits['2_42490447-2_29446395']
+> [[('2', 42490403), 0, ('2', 42490447), 43], [('2', 29446395), 67, ('2', 29446359), 102]]
+breaks=left_right_splits['2_42490447-2_29446395']
+break_5, break_3, gene5, gene3=extract_break_genes(breaks, transcript)
+list(itertools.product(gene5, gene3))
+[('NM_019063.4', 'NM_004304.4'), ('NM_001145076.2', 'NM_004304.4')]
+bk5_location=genes_model[g[0]][break_5]
+bk3_location=genes_model[g[1]][break_3]
+> set([]), set([])
+### so for  ('NM_001145076.2', 'NM_004304.4'), both breaks locations are in introns
+### becuase we have not taken into account fot the gap/overlap???###
+### check what is around break5 '2':42490447
+upstream5=[i for i in genes_model[g[0]].steps() if i[0].end < break_5.start][-1]
+downstream3=[i for i in genes_model[g[0]].steps() if i[0].start > break_5.start][0] 
+upstream5_anno=list(upstream5[1])[0] 
+upstream5
+> (<GenomicInterval object '2', [42490445,42490446), strand '.'>, set(['4_156_467_2']))
+upstream5_anno
+>'4_156_467_2'
+upstream5_dis=break_5.start - upstream5[0].start
+>2
+### so break_5 is 2bp away from the nearest upstream exon###
+downstream3
+> (<GenomicInterval object '2', [42491845,42491846), strand '.'>, set(['5_156_468_3']))
+>downstream3_anno
+### do the same as bk3_location - <GenomicPosition object '2':29446395, strand '.'>
+upstream5
+>(<GenomicInterval object '2', [29446393,29446394), strand '.'>, set(['20_1058_3173_2']))
+downstream3
+>(<GenomicInterval object '2', [29448326,29448327), strand '.'>, set(['19_1058_3172_1']))
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+>('4_156_467_2', -2, '20_1058_3173_2', -2)
+### break_5 is 2 bp downstream of '4_156_467_2' ###
+### break_3 is 2 bp downsstream of '20_1058_3173_2' ###
+### convert cdna_partition to codon_phrase of the protein coding base ###
+>('4_156_467_1', -2, '20_1058_3173_1', -2)
+### try theorectial example for gaps ###
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+>('4_156_467_1', 2, '20_1058_3173_1', -2)
+
+
+### 2018_05_18 ###
+add strandedness information in breaks
+[[('2', 42490403), 0, ('2', 42490447), 43, '+'], [('2', 29446395), 67, ('2', 29446359), 102, '-']]
+### recalculate dis_from annotations, depending on the query strandedness
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+>('4_156_467_1', 2, '20_1058_3173_1', 2)
+gaps=dis_from_5anno +  bps  +  dis_from_3anno
+### 62 bp between annotations '4_156_467_1' and '20_1058_3173_1'
+
+
+### forgot how to generate left_right split--- try again code
+###2018_05_21, Server closed down so reset everything ###
+### partition_modules ###
+
+### try to solve frame status with splice variants ###
+import os, sys, subprocess, HTSeq, argparse, itertools
+from subprocess import Popen, PIPE
+from itertools import groupby 
+
+wkdir="/home/athena/Splitfusion/SplitFusion_ZLZ/example-run-folder"
+in_samSA="A02-P702.consolidated.sam"
+in_sam=HTSeq.SAM_Reader(wkdir + "/" + in_samSA + ".sorted")
+gap_max=2
+overlap_max=10
+mapq=20
+M_length=25
+min_exclusive=25
+SA_bundles=build_SA_bundles(in_sam)
+GFF_file="/home/athena/Refseq/HG19/NCBIRef_seq_HG19_fest.txt"
+GFF_dict, transcript=read_in_feature_file(GFF_file)
+genes_model={}
+
+### try split marks splicing examples###
+### another example '1_27951747-1_27950440', '6_117645495-6_117642557'
+a_split='6_117645493-6_117642546'
+breaks=left_right_splits[a_split]
+break_5, break_3, gene5, gene3=extract_break_genes(breaks, transcript)
+gene_list=list(itertools.product(gene5, gene3))
+gene_list=gene_list[:1]
+genes_model={}
+for g in gene_list:
+        try:
+            bk5_location=genes_model[g[0]][break_5]
+        except:
+            genes_model[g[0]]=build_gene_model(g[0], GFF_dict)
+        try:
+            bk3_location=genes_model[g[1]][break_3]
+        except:
+            genes_model[g[1]]=build_gene_model(g[1], GFF_dict)
+
+bk5_location=genes_model[g[0]][break_5]
+bk3_location=genes_model[g[1]][break_3]
+(bk5_location, bk3_location)
+bk5_gene=GFF_dict[g[0]]['name2']
+bk3_gene=GFF_dict[g[1]]['name2']
+bk5_gene_orientation=GFF_dict[g[0]]['strand']
+bk3_gene_orientation=GFF_dict[g[1]]['strand']
+
+if bk5_location==set([]):
+            bk5_anno, dis_from_5anno, bk5_ref_upstream5, bk5_ref_downstream3=determine_intron_5(break_5, g, genes_model, breaks)
+else:
+            bk5_anno=list(bk5_location)[0]
+            dis_from_5anno=0
+            bk5_ref_upstream5=None
+            bk5_ref_downstream3=None
+
+if bk3_location==set([]):
+            bk3_anno, dis_from_3anno, bk3_ref_upstream5, bk3_ref_downstream3=determine_intron_3(break_3, g, genes_model, breaks)
+else:
+            bk3_anno=list(bk3_location)[0]
+            dis_from_3anno=0
+            bk3_ref_upstream5=None
+            bk3_ref_downstream3=None
+
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+bk5_cDNA_part=int(bk5_anno.split("_")[-2]) 
+bk3_codon_phrase=int(bk3_anno.split("_")[-1])           
+gaps=dis_from_5anno +  bps  +  dis_from_3anno
+bps=breaks[1][1]-breaks[0][3]
+
+### try another example ###
+'9_87339271-9_87342571'
+a_split='9_87339271-9_87342571'
+
+list(genes_model['NM_006180.4'][HTSeq.GenomicPosition("9", 87339270)].steps())
+
+breaks=left_right_splits[a_split]
+break_5, break_3, gene5, gene3=extract_break_genes(breaks, transcript)
+gene_list=list(itertools.product(gene5, gene3))
+gene_list=gene_list[-1:]
+genes_model={}
+for g in gene_list:
+        try:
+            bk5_location=genes_model[g[0]][break_5]
+        except:
+            genes_model[g[0]]=build_gene_model(g[0], GFF_dict)
+        try:
+            bk3_location=genes_model[g[1]][break_3]
+        except:
+            genes_model[g[1]]=build_gene_model(g[1], GFF_dict)
+
+bk5_location=genes_model[g[0]][break_5]
+bk3_location=genes_model[g[1]][break_3]
+(bk5_location, bk3_location)
+bk5_gene=GFF_dict[g[0]]['name2']
+bk3_gene=GFF_dict[g[1]]['name2']
+bk5_gene_orientation=GFF_dict[g[0]]['strand']
+bk3_gene_orientation=GFF_dict[g[1]]['strand']
+
+if bk5_location==set([]):
+            bk5_anno, dis_from_5anno, bk5_ref_upstream5, bk5_ref_downstream3=determine_intron_5(break_5, g, genes_model, breaks)
+else:
+            bk5_anno=list(bk5_location)[0]
+            dis_from_5anno=0
+            bk5_ref_upstream5=None
+            bk5_ref_downstream3=None
+
+if bk3_location==set([]):
+            bk3_anno, dis_from_3anno, bk3_ref_upstream5, bk3_ref_downstream3=determine_intron_3(break_3, g, genes_model, breaks)
+else:
+            bk3_anno=list(bk3_location)[0]
+            dis_from_3anno=0
+            bk3_ref_upstream5=None
+            bk3_ref_downstream3=None
+
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+bps=breaks[1][1]-breaks[0][3]
+bk5_cDNA_part=int(bk5_anno.split("_")[-2]) 
+bk3_codon_phrase=int(bk3_anno.split("_")[-1])   
+(bk5_cDNA_part, bps, bk3_codon_phrase)  
+gaps=dis_from_5anno +  bps  +  dis_from_3anno
+### wrong annotation of 'NM_006180.4' +87339271 ?????
+### modify code -- build_gene_model(g, GFF_dict), try again ###
+g='NM_006180.4'
+genes_model[g]=build_gene_model(g, GFF_dict)
+genes_model[g][HTSeq.GenomicPosition("9", 87339270)]
+genes_model[g][HTSeq.GenomicPosition("9",87285663)]
+
+### try again '2_42490447-2_29446395'
+### positive control 'ZHENGLABSEQ002_2:11109:21494:16208'--left_right_splits['2_42490447-2_29446395']###
+### annotation 2_42490447 EML4 exonic synonymous exonic synonymous_SNV NM_001145076 exon4 462 -- 2_29446396 ALK - exonic synonymous_SNV NM_004304 exon20 3177###
+### final result in-frame EML4 exon4 c.468 .NM_001145076.---ALK exon20 c.3171 ###
+g='NM_001145076.2'
+genes_model[g]=build_gene_model(g, GFF_dict)
+genes_model[g][HTSeq.GenomicPosition("2", 42490446)]
+
+a_split='2_42490447-2_29446395'
+breaks=left_right_splits[a_split]
+break_5, break_3, gene5, gene3=extract_break_genes(breaks, transcript)
+gene_list=list(itertools.product(gene5, gene3))
+gene_list=gene_list[:1]
+genes_model={}
+for g in gene_list:
+        try:
+            bk5_location=genes_model[g[0]][break_5]
+        except:
+            genes_model[g[0]]=build_gene_model(g[0], GFF_dict)
+        try:
+            bk3_location=genes_model[g[1]][break_3]
+        except:
+            genes_model[g[1]]=build_gene_model(g[1], GFF_dict)
+
+bk5_location=genes_model[g[0]][break_5]
+bk3_location=genes_model[g[1]][break_3]
+(bk5_location, bk3_location)
+bk5_gene=GFF_dict[g[0]]['name2']
+bk3_gene=GFF_dict[g[1]]['name2']
+bk5_gene_orientation=GFF_dict[g[0]]['strand']
+bk3_gene_orientation=GFF_dict[g[1]]['strand']
+
+if bk5_location==set([]):
+            bk5_anno, dis_from_5anno, bk5_ref_upstream5, bk5_ref_downstream3=determine_intron_5(break_5, g, genes_model, breaks)
+else:
+            bk5_anno=list(bk5_location)[0]
+            dis_from_5anno=0
+            bk5_ref_upstream5=None
+            bk5_ref_downstream3=None
+
+if bk3_location==set([]):
+            bk3_anno, dis_from_3anno, bk3_ref_upstream5, bk3_ref_downstream3=determine_intron_3(break_3, g, genes_model, breaks)
+else:
+            bk3_anno=list(bk3_location)[0]
+            dis_from_3anno=0
+            bk3_ref_upstream5=None
+            bk3_ref_downstream3=None
+
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+bk5_cDNA_part=int(bk5_anno.split("_")[-2]) 
+bk3_codon_phrase=int(bk3_anno.split("_")[-1])           
+gaps=dis_from_5anno +  bps  +  dis_from_3anno
+bps=breaks[1][1]-breaks[0][3]
+(bk5_anno, gaps, bk3_anno)
+### posotive control was correct in frame_status, presumably fixed ###
+### fixed syntax error in determin frame ###
+### test_adding target_genes
+target_genes="/home/athena/Splitfusion/SplitFusion/scripts/LungFusion.target.genes"
+
+
+### try another example '6_117647385-6_117647470\tROS1\t33_1853_5557_0\tROS1\t33_1825_5473_0\tout_frame\n'
+a_split='6_117647385-6_117647470'
+breaks=left_right_splits[a_split]
+break_5, break_3, gene5, gene3=extract_break_genes(breaks, transcript)
+gene_list=list(itertools.product(gene5, gene3))
+gene_list=gene_list[:1]
+genes_model={}
+for g in gene_list:
+        try:
+            bk5_location=genes_model[g[0]][break_5]
+        except:
+            genes_model[g[0]]=build_gene_model(g[0], GFF_dict)
+        try:
+            bk3_location=genes_model[g[1]][break_3]
+        except:
+            genes_model[g[1]]=build_gene_model(g[1], GFF_dict)
+
+bk5_location=genes_model[g[0]][break_5]
+bk3_location=genes_model[g[1]][break_3]
+(bk5_location, bk3_location)
+bk5_gene=GFF_dict[g[0]]['name2']
+bk3_gene=GFF_dict[g[1]]['name2']
+bk5_gene_orientation=GFF_dict[g[0]]['strand']
+bk3_gene_orientation=GFF_dict[g[1]]['strand']
+
+if bk5_location==set([]):
+            bk5_anno, dis_from_5anno, bk5_ref_upstream5, bk5_ref_downstream3=determine_intron_5(break_5, g, genes_model, breaks)
+else:
+            bk5_anno=list(bk5_location)[0]
+            dis_from_5anno=0
+            bk5_ref_upstream5=None
+            bk5_ref_downstream3=None
+
+if bk3_location==set([]):
+            bk3_anno, dis_from_3anno, bk3_ref_upstream5, bk3_ref_downstream3=determine_intron_3(break_3, g, genes_model, breaks)
+else:
+            bk3_anno=list(bk3_location)[0]
+            dis_from_3anno=0
+            bk3_ref_upstream5=None
+            bk3_ref_downstream3=None
+
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+bk5_cDNA_part=int(bk5_anno.split("_")[-2]) 
+bk3_codon_phrase=int(bk3_anno.split("_")[-1])           
+gaps=dis_from_5anno +  bps  +  dis_from_3anno
+bps=breaks[1][1]-breaks[0][3]
+(bk5_anno, gaps, bk3_anno)
+### posotive control was correct in frame_status, presumably fixed ###
+### fixed syntax error in determin frame ###
+### test_adding target_genes
+target_genes="/home/athena/Splitfusion/SplitFusion/scripts/LungFusion.target.genes"
+
+
+list(genes_model['NM_006180.4'][HTSeq.GenomicPosition("9", 87339270)].steps())
+
+breaks=left_right_splits[a_split]
+break_5, break_3, gene5, gene3=extract_break_genes(breaks, transcript)
+gene_list=list(itertools.product(gene5, gene3))
+gene_list=gene_list[-1:]
+genes_model={}
+for g in gene_list:
+        try:
+            bk5_location=genes_model[g[0]][break_5]
+        except:
+            genes_model[g[0]]=build_gene_model(g[0], GFF_dict)
+        try:
+            bk3_location=genes_model[g[1]][break_3]
+        except:
+            genes_model[g[1]]=build_gene_model(g[1], GFF_dict)
+
+bk5_location=genes_model[g[0]][break_5]
+bk3_location=genes_model[g[1]][break_3]
+(bk5_location, bk3_location)
+bk5_gene=GFF_dict[g[0]]['name2']
+bk3_gene=GFF_dict[g[1]]['name2']
+bk5_gene_orientation=GFF_dict[g[0]]['strand']
+bk3_gene_orientation=GFF_dict[g[1]]['strand']
+
+if bk5_location==set([]):
+            bk5_anno, dis_from_5anno, bk5_ref_upstream5, bk5_ref_downstream3=determine_intron_5(break_5, g, genes_model, breaks)
+else:
+            bk5_anno=list(bk5_location)[0]
+            dis_from_5anno=0
+            bk5_ref_upstream5=None
+            bk5_ref_downstream3=None
+
+if bk3_location==set([]):
+            bk3_anno, dis_from_3anno, bk3_ref_upstream5, bk3_ref_downstream3=determine_intron_3(break_3, g, genes_model, breaks)
+else:
+            bk3_anno=list(bk3_location)[0]
+            dis_from_3anno=0
+            bk3_ref_upstream5=None
+            bk3_ref_downstream3=None
+
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+bps=breaks[1][1]-breaks[0][3]
+bk5_cDNA_part=int(bk5_anno.split("_")[-2]) 
+bk3_codon_phrase=int(bk3_anno.split("_")[-1])   
+(bk5_cDNA_part, bps, bk3_codon_phrase)  
+gaps=dis_from_5anno +  bps  +  dis_from_3anno
+### wrong annotation of 'NM_006180.4' +87339271 ?????
+### modify code -- build_gene_model(g, GFF_dict), try again ###
+g='NM_006180.4'
+genes_model[g]=build_gene_model(g, GFF_dict)
+genes_model[g][HTSeq.GenomicPosition("9", 87339270)]
+genes_model[g][HTSeq.GenomicPosition("9",87285663)]
+
+### try again '2_42490447-2_29446395'
+### positive control 'ZHENGLABSEQ002_2:11109:21494:16208'--left_right_splits['2_42490447-2_29446395']###
+### annotation 2_42490447 EML4 exonic synonymous exonic synonymous_SNV NM_001145076 exon4 462 -- 2_29446396 ALK - exonic synonymous_SNV NM_004304 exon20 3177###
+### final result in-frame EML4 exon4 c.468 .NM_001145076.---ALK exon20 c.3171 ###
+g='NM_001145076.2'
+genes_model[g]=build_gene_model(g, GFF_dict)
+genes_model[g][HTSeq.GenomicPosition("2", 42490446)]
+
+a_split='2_42490447-2_29446395'
+breaks=left_right_splits[a_split]
+break_5, break_3, gene5, gene3=extract_break_genes(breaks, transcript)
+gene_list=list(itertools.product(gene5, gene3))
+gene_list=gene_list[:1]
+genes_model={}
+for g in gene_list:
+        try:
+            bk5_location=genes_model[g[0]][break_5]
+        except:
+            genes_model[g[0]]=build_gene_model(g[0], GFF_dict)
+        try:
+            bk3_location=genes_model[g[1]][break_3]
+        except:
+            genes_model[g[1]]=build_gene_model(g[1], GFF_dict)
+
+bk5_location=genes_model[g[0]][break_5]
+bk3_location=genes_model[g[1]][break_3]
+(bk5_location, bk3_location)
+bk5_gene=GFF_dict[g[0]]['name2']
+bk3_gene=GFF_dict[g[1]]['name2']
+bk5_gene_orientation=GFF_dict[g[0]]['strand']
+bk3_gene_orientation=GFF_dict[g[1]]['strand']
+
+if bk5_location==set([]):
+            bk5_anno, dis_from_5anno, bk5_ref_upstream5, bk5_ref_downstream3=determine_intron_5(break_5, g, genes_model, breaks)
+else:
+            bk5_anno=list(bk5_location)[0]
+            dis_from_5anno=0
+            bk5_ref_upstream5=None
+            bk5_ref_downstream3=None
+
+if bk3_location==set([]):
+            bk3_anno, dis_from_3anno, bk3_ref_upstream5, bk3_ref_downstream3=determine_intron_3(break_3, g, genes_model, breaks)
+else:
+            bk3_anno=list(bk3_location)[0]
+            dis_from_3anno=0
+            bk3_ref_upstream5=None
+            bk3_ref_downstream3=None
+
+(bk5_anno, dis_from_5anno, bk3_anno, dis_from_3anno)
+bk5_cDNA_part=int(bk5_anno.split("_")[-2]) 
+bk3_codon_phrase=int(bk3_anno.split("_")[-1])           
+gaps=dis_from_5anno +  bps  +  dis_from_3anno
+bps=breaks[1][1]-breaks[0][3]
+(bk5_anno, gaps, bk3_anno)
+### posotive control was correct in frame_status, presumably fixed ###
+### fixed syntax error in determin frame ###
+### test_adding target_genes
+target_genes="/home/athena/Splitfusion/SplitFusion/scripts/LungFusion.target.genes"
+### try another example '6_117647385-6_117647470\tROS1\t33_1853_5557_0\tROS1\t33_1825_5473_0\tout_frame\n' ###
+
+a_split='6_117647385-6_117647470'
+breaks=left_right_splits[a_split]
+break_5, break_3, gene5, gene3=extract_break_genes(breaks, transcript)
+gene_list=list(itertools.product(gene5, gene3))
+

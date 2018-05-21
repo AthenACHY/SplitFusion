@@ -203,9 +203,6 @@ def filter_stagerring_ends(splits_clustered, SA_bundles, orientation):
     return filtered_list
 
 
-left_splits_clustered0=filter_stagerring_ends(left_splits_clustered, SA_bundles, "left")
-right_splits_clustered0=filter_stagerring_ends(right_splits_clustered, SA_bundles, "right")
-
 ###4 identify the other end of breakpoints from splits_clustered ###
 def collect_reads_from_splits(a_split_list, breakpoints):     
     boundary=[]
@@ -243,15 +240,7 @@ def define_break_points_boundary(splits_clustered, breakpoints, SA_bundles, orie
         break_list.append([split_bin, reads, split_support])
     return break_list
 
-for i in left_splits_clustered0:
-        reads=collect_reads_from_splits(i, breakpoints)
-        split_support=sum([u[0] for u in reads])
-        i=sorted(i, key=lambda w: (w[0].chrom, w[0].start))
-        split_bin="-".join(("_".join((str(i[0][0].chrom), str(i[0][0].start))), "_".join((str(i[-1][0].chrom), str(i[-1][0].start)))))
-        break_list.append([split_bin, reads, split_support])
 
-left_breaklist=define_break_points_boundary(left_splits_clustered0, left_breakpoints, SA_bundles, "left")
-right_breaklist=define_break_points_boundary(right_splits_clustered0, right_breakpoints, SA_bundles, "right")
 
 ###5 input annotation of exons###       
 ### gene features from UCSC table browser, Genes and gene prediction  , UCSC genes, known Genes, output as all fields from selected table ###
@@ -306,7 +295,7 @@ def read_in_feature_file(GFF_file):
                     transcript[HTSeq.GenomicInterval( row_dict["chrom"], row_dict["txStart"], row_dict["txEnd"], "." )]+=row_dict["name"]
     return GFF_dict, transcript
 
-GFF_dict, transcript=read_in_feature_file(GFF_file)
+
 
 ####5.0.1 build model for gene transcript ###
 def build_gene_model(g, GFF_dict):
@@ -440,23 +429,7 @@ def get_split_info_from_GFF(GFF_dict, transcript, breaklist):
     return breaks_per_bin
                 
 
-left_breaks_per_bin=get_split_info_from_GFF(GFF_dict, transcript, left_breaklist)
-right_breaks_per_bin=get_split_info_from_GFF(GFF_dict, transcript, right_breaklist)
-
-#Test code to ensure the exon_no and cds inference is correct
-# g='NM_004521.2'
-# g_model=build_gene_model(g, GFF_dict)
-# g_model[HTSeq.GenomicPosition(GFF_dict[g]['chrom'], 32317354)]
-# test_left=left_breaklist[:1]
-#[i for i in left_breaks_per_bin.keys() if "10_" in i[0]]
-# left_breaks_per_bin=get_split_info_from_GFF(GFF_dict, transcript, test_left)
-# left_breaks_per_bin['15_88669605-15_88669610']
-# left_breaks_per_bin['10_43607554-10_43607556']
-
-# right_breaks_per_bin['10_43608912-10_43608920']
-# right_breaks_per_bin['1_27951600-1_27951600']
-
-### 5 merge left and right_split, filter if present in both side ###
+### 5.2 merge left and right_split, filter if present in both side ###
 def organise_split_junction(right_breaklist, right_breaks_per_bin,left_breaklist, left_breaks_per_bin, orientation, GFF_dict):
     """ if left and right junctions were common, remove the bin"""
     """input the break-list and breaks_per_bin"""
@@ -475,4 +448,26 @@ def organise_split_junction(right_breaklist, right_breaks_per_bin,left_breaklist
 
 
 
+### Wrapper ###
 
+left_splits_clustered0=filter_stagerring_ends(left_splits_clustered, SA_bundles, "left")
+right_splits_clustered0=filter_stagerring_ends(right_splits_clustered, SA_bundles, "right")
+
+left_breaklist=define_break_points_boundary(left_splits_clustered0, left_breakpoints, SA_bundles, "left")
+right_breaklist=define_break_points_boundary(right_splits_clustered0, right_breakpoints, SA_bundles, "right")
+GFF_dict, transcript=read_in_feature_file(GFF_file)
+left_breaks_per_bin=get_split_info_from_GFF(GFF_dict, transcript, left_breaklist)
+right_breaks_per_bin=get_split_info_from_GFF(GFF_dict, transcript, right_breaklist)
+
+#Test code to ensure the exon_no and cds inference is correct
+# g='NM_004521.2'
+# g_model=build_gene_model(g, GFF_dict)
+# g_model[HTSeq.GenomicPosition(GFF_dict[g]['chrom'], 32317354)]
+# test_left=left_breaklist[:1]
+#[i for i in left_breaks_per_bin.keys() if "10_" in i[0]]
+# left_breaks_per_bin=get_split_info_from_GFF(GFF_dict, transcript, test_left)
+# left_breaks_per_bin['15_88669605-15_88669610']
+# left_breaks_per_bin['10_43607554-10_43607556']
+
+# right_breaks_per_bin['10_43608912-10_43608920']
+# right_breaks_per_bin['1_27951600-1_27951600']
